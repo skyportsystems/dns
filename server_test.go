@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func HelloServer(w ResponseWriter, req *Msg) {
+func HelloServer(w ResponseWriter, req *Msg, matched string) {
 	m := new(Msg)
 	m.SetReply(req)
 
@@ -20,7 +20,7 @@ func HelloServer(w ResponseWriter, req *Msg) {
 	w.WriteMsg(m)
 }
 
-func HelloServerBadId(w ResponseWriter, req *Msg) {
+func HelloServerBadId(w ResponseWriter, req *Msg, matched string) {
 	m := new(Msg)
 	m.SetReply(req)
 	m.Id++
@@ -30,7 +30,7 @@ func HelloServerBadId(w ResponseWriter, req *Msg) {
 	w.WriteMsg(m)
 }
 
-func AnotherHelloServer(w ResponseWriter, req *Msg) {
+func AnotherHelloServer(w ResponseWriter, req *Msg, matched string) {
 	m := new(Msg)
 	m.SetReply(req)
 
@@ -282,7 +282,7 @@ func benchmarkServe6(b *testing.B) {
 	runtime.GOMAXPROCS(a)
 }
 
-func HelloServerCompress(w ResponseWriter, req *Msg) {
+func HelloServerCompress(w ResponseWriter, req *Msg, matched string) {
 	m := new(Msg)
 	m.SetReply(req)
 	m.Extra = make([]RR, 1)
@@ -317,22 +317,22 @@ func TestDotAsCatchAllWildcard(t *testing.T) {
 	mux.Handle(".", HandlerFunc(HelloServer))
 	mux.Handle("example.com.", HandlerFunc(AnotherHelloServer))
 
-	handler := mux.match("www.miek.nl.", TypeTXT)
+	handler, _ := mux.match("www.miek.nl.", TypeTXT)
 	if handler == nil {
 		t.Error("wildcard match failed")
 	}
 
-	handler = mux.match("www.example.com.", TypeTXT)
+	handler, _ = mux.match("www.example.com.", TypeTXT)
 	if handler == nil {
 		t.Error("example.com match failed")
 	}
 
-	handler = mux.match("a.www.example.com.", TypeTXT)
+	handler, _ = mux.match("a.www.example.com.", TypeTXT)
 	if handler == nil {
 		t.Error("a.www.example.com match failed")
 	}
 
-	handler = mux.match("boe.", TypeTXT)
+	handler, _ = mux.match("boe.", TypeTXT)
 	if handler == nil {
 		t.Error("boe. match failed")
 	}
@@ -342,12 +342,12 @@ func TestCaseFolding(t *testing.T) {
 	mux := NewServeMux()
 	mux.Handle("_udp.example.com.", HandlerFunc(HelloServer))
 
-	handler := mux.match("_dns._udp.example.com.", TypeSRV)
+	handler, _ := mux.match("_dns._udp.example.com.", TypeSRV)
 	if handler == nil {
 		t.Error("case sensitive characters folded")
 	}
 
-	handler = mux.match("_DNS._UDP.EXAMPLE.COM.", TypeSRV)
+	handler, _ = mux.match("_DNS._UDP.EXAMPLE.COM.", TypeSRV)
 	if handler == nil {
 		t.Error("case insensitive characters not folded")
 	}
@@ -357,7 +357,7 @@ func TestRootServer(t *testing.T) {
 	mux := NewServeMux()
 	mux.Handle(".", HandlerFunc(HelloServer))
 
-	handler := mux.match(".", TypeNS)
+	handler, _ := mux.match(".", TypeNS)
 	if handler == nil {
 		t.Error("root match failed")
 	}
@@ -370,7 +370,7 @@ type maxRec struct {
 
 var M = new(maxRec)
 
-func HelloServerLargeResponse(resp ResponseWriter, req *Msg) {
+func HelloServerLargeResponse(resp ResponseWriter, req *Msg, matched string) {
 	m := new(Msg)
 	m.SetReply(req)
 	m.Authoritative = true

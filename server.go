@@ -16,7 +16,7 @@ const maxTCPQueries = 128
 
 // Handler is implemented by any value that implements ServeDNS.
 type Handler interface {
-	ServeDNS(w ResponseWriter, r *Msg)
+	ServeDNS(w ResponseWriter, r *Msg, domain string)
 }
 
 // A ResponseWriter interface is used by an DNS handler to
@@ -76,15 +76,15 @@ var DefaultServeMux = NewServeMux()
 // ordinary functions as DNS handlers.  If f is a function
 // with the appropriate signature, HandlerFunc(f) is a
 // Handler object that calls f.
-type HandlerFunc func(ResponseWriter, *Msg)
+type HandlerFunc func(ResponseWriter, *Msg, string)
 
-// ServeDNS calls f(w, r).
-func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
-	f(w, r)
+// ServeDNS calls f(w, r, domain).
+func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg, domain string) {
+	f(w, r, domain)
 }
 
 // HandleFailed returns a HandlerFunc that returns SERVFAIL for every request it gets.
-func HandleFailed(w ResponseWriter, r *Msg) {
+func HandleFailed(w ResponseWriter, r *Msg, domain string) {
 	m := new(Msg)
 	m.SetRcode(r, RcodeServerFailure)
 	// does not matter if this write fails
@@ -131,7 +131,7 @@ func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 	return server.ActivateAndServe()
 }
 
-func (mux *ServeMux) match(q string, t uint16) Handler {
+func (mux *ServeMux) match(q string, t uint16) (h Handler, domain string) {
 	mux.m.RLock()
 	defer mux.m.RUnlock()
 	var handler Handler
@@ -148,10 +148,11 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 		}
 		if h, ok := mux.z[string(b[:l])]; ok { // 'causes garbage, might want to change the map key
 			if t != TypeDS {
-				return h
+				return h, string(b[:l])
 			}
 			// Continue for DS to see if we have a parent too, if so delegeate to the parent
 			handler = h
+			domain = string(b[:l])
 		}
 		off, end = NextLabel(q, off)
 		if end {
@@ -160,9 +161,9 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 	}
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
-		return h
+		return h, "."
 	}
-	return handler
+	return handler, domain
 }
 
 // Handle adds a handler to the ServeMux for pattern.
@@ -176,7 +177,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 }
 
 // HandleFunc adds a handler function to the ServeMux for pattern.
-func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
+func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Msg, string)) {
 	mux.Handle(pattern, HandlerFunc(handler))
 }
 
@@ -197,16 +198,16 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 // If no handler is found a standard SERVFAIL message is returned
 // If the request message does not have exactly one question in the
 // question section a SERVFAIL is returned, unlesss Unsafe is true.
-func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
+func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg, domain string) {
 	var h Handler
 	if len(request.Question) < 1 { // allow more than one question
 		h = failedHandler()
 	} else {
-		if h = mux.match(request.Question[0].Name, request.Question[0].Qtype); h == nil {
+		if h, domain = mux.match(request.Question[0].Name, request.Question[0].Qtype); h == nil {
 			h = failedHandler()
 		}
 	}
-	h.ServeDNS(w, request)
+	h.ServeDNS(w, request, domain)
 }
 
 // Handle registers the handler with the given pattern
@@ -220,7 +221,7 @@ func HandleRemove(pattern string) { DefaultServeMux.HandleRemove(pattern) }
 
 // HandleFunc registers the handler function with the given pattern
 // in the DefaultServeMux.
-func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
+func HandleFunc(pattern string, handler func(ResponseWriter, *Msg, string)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
 }
 
@@ -573,7 +574,7 @@ Redo:
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
 		}
 	}
-	h.ServeDNS(w, req) // Writes back to the client
+	h.ServeDNS(w, req, "") // Writes back to the client
 
 Exit:
 	if w.tcp == nil {
