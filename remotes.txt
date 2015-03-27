@@ -1,0 +1,6 @@
+origin	git@github.com:skyportsystems/dns (fetch)
+origin	git@github.com:skyportsystems/dns (push)
+upstream	https://github.com/cloudflare/dns.git (fetch)
+upstream	https://github.com/cloudflare/dns.git (push)
+upstreamRoot	https://github.com/cloudflare/dns.git (fetch)
+upstreamRoot	https://github.com/cloudflare/dns.git (push)
