@@ -1286,6 +1286,15 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 						name := val.FieldByName("OtherLen")
 						size = int(name.Uint())
 					}
+				case "TKEY":
+					switch val.Type().Field(i).Name {
+					case "Key":
+						name := val.FieldByName("KeySize")
+						size = int(name.Uint())
+					case "OtherData":
+						name := val.FieldByName("OtherLen")
+						size = int(name.Uint())
+					}
 				}
 				if off+size > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking hex"}

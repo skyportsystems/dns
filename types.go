@@ -1031,14 +1031,14 @@ type TKEY struct {
 	Mode       uint16
 	Error      uint16
 	KeySize    uint16
-	Key        string
+	Key        string `dns:"size-hex"`
 	OtherLen   uint16
 	OtherData  string
 }
 
 func (rr *TKEY) String() string {
 	// It has no presentation format
-	return ""
+	return fmt.Sprintf("%s Algo: %s KeyLen: %d OtherLen: %d", rr.Hdr.String(), rr.Algorithm, rr.KeySize, rr.OtherLen)
 }
 
 // RFC3597 represents an unknown/generic RR.
