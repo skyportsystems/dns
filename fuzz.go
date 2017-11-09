@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func Fuzz(rawMsg []byte) int {
+func Fuzz(data []byte) int {
 	var (
 		msg         = &Msg{}
 		buf, bufOne = make([]byte, 100000), make([]byte, 100000)
@@ -17,7 +17,7 @@ func Fuzz(rawMsg []byte) int {
 		unpackErr, packErr error
 	)
 
-	if unpackErr = msg.Unpack(rawMsg); unpackErr != nil {
+	if unpackErr = msg.Unpack(data); unpackErr != nil {
 		return 0
 	}
 
@@ -31,7 +31,7 @@ func Fuzz(rawMsg []byte) int {
 
 	resOne, packErr = msg.PackBuffer(bufOne)
 	if packErr != nil {
-		println("Pack failed only with a filled buffer")
+		println("pack failed only with a filled buffer")
 		panic(packErr)
 	}
 

@@ -17,6 +17,11 @@ build:
 fuzz:
 	go-fuzz -bin=dns-fuzz.zip -workdir=fuzz
 
+.PHONY: get
+get:
+	go get github.com/dvyukov/go-fuzz/go-fuzz
+	go get github.com/dvyukov/go-fuzz/go-fuzz-build
+
 .PHONY: clean
 clean:
 	rm *-fuzz.zip
