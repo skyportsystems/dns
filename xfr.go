@@ -212,6 +212,7 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 	if err := m.Unpack(p); err != nil {
 		return nil, err
 	}
+	/* SKYPORT: we use this library as a MITM proxy and don't want to deal with TSIG
 	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
 		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
 			return m, ErrSecret
@@ -220,12 +221,14 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 		err = TsigVerify(p, t.TsigSecret[ts.Hdr.Name], t.tsigRequestMAC, t.tsigTimersOnly)
 		t.tsigRequestMAC = ts.MAC
 	}
+	*/
 	return m, err
 }
 
 // WriteMsg writes a message through the transfer connection t.
 func (t *Transfer) WriteMsg(m *Msg) (err error) {
 	var out []byte
+	/* SKYPORT: we use this library as a MITM proxy and don't want to deal with TSIG
 	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
 		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
 			return ErrSecret
@@ -234,6 +237,8 @@ func (t *Transfer) WriteMsg(m *Msg) (err error) {
 	} else {
 		out, err = m.Pack()
 	}
+	*/
+	out, err = m.Pack()
 	if err != nil {
 		return err
 	}

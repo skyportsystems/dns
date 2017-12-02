@@ -164,7 +164,7 @@ func TestClientTLSSyncV4(t *testing.T) {
 }
 
 func TestClientSyncBadID(t *testing.T) {
-	HandleFunc("miek.nl.", HelloServerBadID)
+	HandleFunc("miek.nl.", HelloServerBadId)
 	defer HandleRemove("miek.nl.")
 
 	s, addrstr, err := RunLocalUDPServer(":0")
@@ -217,7 +217,7 @@ func TestClientEDNS0Local(t *testing.T) {
 	optStr1 := "1979:0x0707"
 	optStr2 := strconv.Itoa(EDNS0LOCALSTART) + ":0x0601"
 
-	handler := func(w ResponseWriter, req *Msg) {
+	handler := func(w ResponseWriter, req *Msg, matched string) {
 		m := new(Msg)
 		m.SetReply(req)
 
@@ -539,7 +539,7 @@ func TestConcurrentExchanges(t *testing.T) {
 		block := make(chan struct{})
 		waiting := make(chan struct{})
 
-		handler := func(w ResponseWriter, req *Msg) {
+		handler := func(w ResponseWriter, req *Msg, matched string) {
 			r := m.Copy()
 			r.SetReply(req)
 
