@@ -769,9 +769,7 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 		}
 	}
 	for i := 0; i < len(answer); i++ {
-		// SKYPORT - Windows has demonstrated that it will not tolerate any compression in the prerequisite
-		// section of a dynamic update so we disable it for that.
-		off, err = PackRR(answer[i], msg, off, compression, (dns.Opcode != OpcodeUpdate && dns.Compress))
+		off, err = PackRR(answer[i], msg, off, compression, dns.Compress)
 		if err != nil {
 			return nil, err
 		}
