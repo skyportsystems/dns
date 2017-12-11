@@ -350,7 +350,6 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 // signature is calculated.
 func (co *Conn) WriteMsg(m *Msg) (err error) {
 	var out []byte
-	/* SKYPORT: we use this library as a MITM proxy and don't want to deal with TSIG
 	if t := m.IsTsig(); t != nil {
 		mac := ""
 		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
@@ -362,8 +361,6 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 	} else {
 		out, err = m.Pack()
 	}
-	*/
-	out, err = m.Pack()
 	if err != nil {
 		return err
 	}
