@@ -210,7 +210,6 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		}
 		return nil, err
 	}
-	/* SKYPORT: we use this library as a MITM proxy and don't want to deal with TSIG
 	if t := m.IsTsig(); t != nil {
 		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
 			return m, ErrSecret
@@ -218,7 +217,6 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		// Need to work on the original message p, as that was used to calculate the tsig.
 		err = TsigVerify(p, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
 	}
-	*/
 	return m, err
 }
 
